@@ -1,0 +1,45 @@
+- name: Create nginx data folder
+  become: true
+  file:
+    path: "{{ nginx_data_path }}"
+    state: directory
+    owner: docker
+    group: docker
+    mode: '755'
+
+- name: Add nginx root config
+  become: true
+  copy:
+    src: nginx.conf
+    dest: "{{ nginx_data_path }}nginx.conf"
+    owner: docker
+    group: docker
+    mode: '644'
+
+- name: Create vhost directory
+  become: true
+  file:
+    path: "{{ nginx_data_path }}vhosts/"
+    state: directory
+    owner: docker
+    group: docker
+    mode: '755'
+
+- name: Template vhost config files
+  become: true
+  template:
+    dest: "{{ nginx_data_path }}vhosts/{{ item.name }}.conf"
+    src: vhost_home.conf.j2
+    owner: docker
+    group: docker
+    mode: '644'
+  loop: "{{ proxied_services.home }}"
+
+- name: Copy Bitwarden vhost config
+  become: true
+  template:
+    dest: "{{ nginx_data_path }}vhosts/bitwarden.conf"
+    src: bitwarden.conf.j2
+    owner: docker
+    group: docker
+    mode: '644'

@@ -1,0 +1,5 @@
+- name: Install and run certbot
+  ansible.builtin.include_tasks: certbot.yaml
+
+- name: Configure nginx
+  ansible.builtin.include_tasks: nginx.yaml

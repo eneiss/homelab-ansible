@@ -1,0 +1,54 @@
+- name: QoL - Add apt repository keys
+  become: true
+  apt_key:
+    url: "{{ item }}"
+    state: present
+  loop: "{{ qol_packages.gpg_keys }}"
+
+- name: QoL - Add apt repositories
+  become: true
+  apt_repository:
+    repo: "{{ item }}"
+    state: present
+  loop: "{{ qol_packages.repositories }}"
+
+- name: Apt-get update
+  become: true
+  apt:
+    update_cache: true
+  changed_when: false
+
+- name: Install QoL packages
+  become: true
+  package:
+    name: "{{ item }}"
+    state: "{{ packages_state }}"
+  loop: "{{ qol_packages.packages }}"
+
+- name: Check python version
+  ansible.builtin.command:
+    cmd: "python3 --version"
+  register: python_version
+  changed_when: false
+
+# See error here on pip install tasks:
+# https://stackoverflow.com/questions/75608323/how-do-i-solve-error-externally-managed-environment-every-time-i-use-pip-3
+- name: Remove file causing error for pip installs
+  ansible.builtin.file:
+    path: /usr/lib/python3.11/EXTERNALLY-MANAGED
+    state: absent
+  when: python_version.stdout is search("3.11")
+
+- name: "Ansibleception - Install Ansible"
+  remote_user: "{{ ubuntu_user }}"
+  pip:
+    state: "{{ packages_state }}"
+    name: ansible
+    extra_args: "--user"
+
+- name: Install pip packages
+  remote_user: "{{ ubuntu_user }}"
+  ansible.builtin.pip:
+    state: "{{ packages_state }}"
+    name: "{{ item }}"
+  loop: "{{ qol_packages.pip_packages }}"

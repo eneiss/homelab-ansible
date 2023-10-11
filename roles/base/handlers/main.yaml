@@ -1,0 +1,6 @@
+- name: Restart sshd
+  become: true
+  listen: restart_sshd
+  service:
+    name: ssh
+    state: restarted

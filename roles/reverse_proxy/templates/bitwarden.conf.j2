@@ -1,0 +1,35 @@
+upstream docker-bitwarden {
+    server bitwarden:80;
+    # server bitwarden:8080;
+}
+
+server {
+  listen 80;
+  server_name bitwarden.{{ apex_domain }};
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl;
+  server_name bitwarden.{{ apex_domain }};
+
+  ssl_certificate /etc/letsencrypt/live/{{ apex_domain }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ apex_domain }}/privkey.pem;
+  ssl_session_timeout 5m;
+  ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM';
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_prefer_server_ciphers on;
+  # ssl_dhparam /etc/nginx/conf.d/dhparam.pem;    # TODO: generate this file
+
+  location / {
+    proxy_pass http://docker-bitwarden;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 10000M;
+    add_header X-Served-By "Bitwarden Nginx Reverse Proxy";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Robots-Tag "noindex, nofollow, nosnippet, noarchive";
+  }
+}

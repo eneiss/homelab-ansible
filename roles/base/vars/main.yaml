@@ -1,0 +1,22 @@
+qol_packages:
+  gpg_keys:
+  - https://repos.influxdata.com/influxdata-archive_compat.key
+  repositories:
+  - deb https://repos.influxdata.com/debian stable main
+  packages:
+  - vim
+  - telegraf
+  - htop
+  - sysstat
+  - iotop
+  - net-tools
+  - curl
+  - wget
+  - rsync
+  - tmux
+  - tcpdump
+  - python3
+  - python3-pip
+  # - python-setuptools   # not available in Ubuntu 23.04 Lunar
+  pip_packages:
+  - passlib

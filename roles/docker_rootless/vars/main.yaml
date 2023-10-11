@@ -1,0 +1,19 @@
+docker:
+  packages_to_remove:
+    - docker.io
+    - docker-doc
+    - docker-compose
+    - podman-docker
+    - containerd
+  prerequisite_packages:
+    - ca-certificates
+    - curl
+    - gnupg
+    - uidmap
+    - dbus-user-session
+  packages:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    - docker-compose-plugin

@@ -1,0 +1,71 @@
+---
+- name: Ensure dependencies are installed
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: "{{ packages_state }}"
+  loop: "{{ docker.prerequisite_packages }}"
+  failed_when: ansible_pkg_mgr != 'apt'
+
+- name: Delete conflicting packages
+  become: true
+  apt:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ docker.packages_to_remove }}"
+
+- name: Test uidmap commands
+  command: "{{ item }}"
+  loop:
+  - which newuidmap
+  - which newgidmap
+  changed_when: false
+
+- name: Check number of UIDs/GIDs
+  become: true
+  shell:
+    executable: /bin/bash
+    cmd: |
+      set -o pipefail
+      tail -n 1 /etc/{{ item }} | awk -F: '{print $3}'
+  loop:
+  - subuid
+  - subgid
+  register: nb_id
+  failed_when: nb_id.stdout | int < 65535
+  changed_when: false
+
+- name: Get Docker GPG key
+  become: true
+  apt_key:
+    url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+    state: present
+
+- name: Add Docker repository
+  become: true
+  apt_repository:
+    repo: "deb https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+    state: present
+
+- name: Create Docker user for rootless execution
+  become: true
+  user:
+    name: docker
+    create_home: true
+    shell: "/bin/bash"
+
+- name: Create SSH directory for docker user
+  become: true
+  file:
+    mode: "700"
+    owner: docker
+    state: directory
+    path: "/home/docker/.ssh"
+
+- name: Create authorized_keys file for docker
+  become: true
+  copy:
+    mode: "600"
+    owner: docker
+    src: files/authorized_keys
+    dest: "/home/docker/.ssh/authorized_keys"

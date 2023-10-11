@@ -1,0 +1,8 @@
+nginx_data_path: "{{ docker_data_path }}docker-nginx/"
+proxied_services:
+  home:
+  - name: mealie
+  - name: scry
+  - name: secret
+    alt_names:
+    - privatebin

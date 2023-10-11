@@ -1,0 +1,119 @@
+- name: "Install and configure Docker prerequisites"
+  include_tasks: docker-prerequisites.yml
+
+# Additional setup for current non-root user
+- name: Create Docker group
+  become: true
+  group:
+    name: docker
+    state: present
+  notify: logout_required
+
+- name: Add user to Docker group
+  become: true
+  user:
+    name: "{{ ubuntu_user }}"
+    append: true
+    groups:
+      - docker
+
+# Install Docker once requirements are met
+- name: Install Docker packages
+  become: true
+  package:
+    name: "{{ item }}"
+    state: "{{ packages_state }}"
+  loop: "{{ docker.packages }}"
+  notify: restart_docker
+
+- name: Disable and stop Docker service and socket
+  become: true
+  systemd:
+    state: stopped
+    enabled: false
+    name: "{{ item }}"
+  loop:
+  - docker.service
+  - docker.socket
+
+- name: Ensure Docker rootless installer is present
+  stat:
+    path: /usr/bin/dockerd-rootless-setuptool.sh
+
+- name: Check if Docker rootless is already running   # noqa command-instead-of-module
+  remote_user: docker
+  command:
+    cmd: systemctl is-active --quiet --user docker    # returns 0 if service is active, non-zero otherwise
+  register: docker_user_status
+  changed_when: false
+  ignore_errors: true
+
+- name: Debug check output
+  debug:
+    msg: "{{ docker_user_status }}"
+
+# Delete /var/run/docker.sock if existing and empty
+- name: Check docker.sock file size
+  become: true
+  stat:
+    path: /var/run/docker.sock
+  register: docker_sock_info
+
+- name: Delete existing docker.sock messing up with rootless install
+  become: true
+  file:
+    state: absent
+    path: /var/run/docker.sock
+  when: docker_sock_info.stat.exists and docker_sock_info.stat.size == 0
+
+- name: Run rootless Docker installer if service not already running as non-root
+  remote_user: docker
+  command: /usr/bin/dockerd-rootless-setuptool.sh install
+  register: docker_install_output
+  when: docker_user_status.rc | int != 0
+  changed_when: true
+
+- name: Debug install output
+  debug:
+    msg: "{{ docker_install_output }}"
+
+- name: Start & enable Docker
+  remote_user: docker
+  systemd:
+    name: docker.service
+    state: started
+    enabled: true
+    scope: user
+
+# Equivalent of loginctl enable-linger myuser
+- name: Enable lingering for docker user idempotently
+  become: true
+  file:
+    path: /var/lib/systemd/linger/docker
+    state: touch
+    mode: "644"
+  changed_when: false
+
+- name: Update PATH for rootless Docker
+  lineinfile:
+    line: "{{ item }}"
+    path: /home/docker/.bashrc
+  loop:
+  - export PATH=/usr/bin:$PATH
+  - export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
+
+- name: Enable rootless Docker to use port 25 and after
+  become: true
+  ansible.posix.sysctl:
+    name: "net.ipv4.ip_unprivileged_port_start"
+    value: "25"
+    reload: true
+
+- name: Create docker data folder
+  become: true
+  file:
+    path: "{{ docker_data_path }}"
+    state: directory
+    owner: docker
+    group: docker
+    mode: '755'

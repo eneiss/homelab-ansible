@@ -1,0 +1,7 @@
+*.pem
+*.enc
+.vscode/*
+inventory.*
+authorized_keys
+.git2/*
+.git/*

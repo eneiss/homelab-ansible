@@ -1,0 +1,64 @@
+# See docs for certbot here: https://certbot.eff.org/instructions?ws=nginx&os=ubuntufocal&tab=wildcard
+- name: Install certbot
+  become: true
+  community.general.snap:
+    name: certbot
+    state: present        # note: cannot be "latest"
+    classic: true
+    options:
+    - trust-plugin-with-root=ok
+
+- name: Prepare certbot command
+  become: true
+  file:
+    src: /snap/bin/certbot
+    dest: /usr/bin/certbot
+    state: link
+
+- name: Install Route53 DNS plugin
+  become: true
+  community.general.snap:
+    name: certbot-dns-route53
+    state: present
+
+- name: Create AWS credentials folder
+  file:
+    path: "/home/{{ ubuntu_user }}/.aws"
+    state: directory
+    owner: "{{ ubuntu_user }}"
+    group: "{{ ubuntu_user }}"
+    mode: "755"
+
+- name: Setup AWS credentials
+  ansible.builtin.template:
+    src: aws_config.j2
+    dest: "/home/{{ ubuntu_user }}/.aws/config"
+    owner: "{{ ubuntu_user }}"
+    group: "{{ ubuntu_user }}"
+    mode: "600"
+
+- name: Generate SSL certificate
+  remote_user: "{{ ubuntu_user }}"
+  become: true
+  become_flags: "-E"
+  ansible.builtin.command:
+    cmd: >
+      certbot certonly
+      --non-interactive
+      --dns-route53
+      -d *.{{ apex_domain }}
+      --agree-tos
+      --keep-until-expiring
+      --email {{ certbot.email }}
+    creates: "/etc/letsencrypt/live/{{ apex_domain }}"
+  register: certbot_output
+  changed_when: not certbot_output.stdout is search("no action taken")
+
+- name: Give rootless docker permission to access Letsencrypt directory
+  become: true
+  ansible.builtin.file:
+    path: /etc/letsencrypt/
+    state: directory
+    owner: docker
+    group: docker
+    recurse: true

@@ -1,0 +1,49 @@
+- name: Create Ubuntu user with home directory
+  become: true
+  ansible.builtin.user:
+    name: "{{ ubuntu_user }}"
+    password: "{{ ubuntu_user_password | password_hash('sha512', password_salt) }}"   # use fixed salt for idempotency
+    create_home: true
+    shell: "/bin/bash"
+
+- name: Add user to sudoers
+  become: true
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: "^{{ ubuntu_user }}"
+    line: "{{ ubuntu_user }} ALL=(ALL) NOPASSWD:ALL"
+    validate: "visudo -cf %s"
+
+- name: "Create SSH directory for root and {{ ubuntu_user }}"
+  become: true
+  file:
+    mode: "700"
+    owner: "{{ item }}"
+    state: directory
+    path: "/home/{{ item }}/.ssh"
+  loop:
+  - root
+  - "{{ ubuntu_user }}"
+
+- name: "Create authorized_keys file for root and {{ ubuntu_user }}"
+  become: true
+  copy:
+    mode: "600"
+    owner: "{{ ubuntu_user }}"
+    src: files/authorized_keys    # TODO: use distant file instead
+    dest: "/home/{{ item }}/.ssh/authorized_keys"
+  loop:
+  - root
+  - "{{ ubuntu_user }}"
+
+- name: Configure sshd
+  become: true
+  copy:
+    mode: "644"
+    src: files/sshd_config
+    dest: /etc/ssh/sshd_config
+  notify: restart_sshd
+
+- name: Install QoL packages
+  include_tasks: qol-packages.yaml

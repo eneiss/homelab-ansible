@@ -1,0 +1,31 @@
+server {
+  listen 80;
+  server_name {{ item.name }}.{{ apex_domain }} {% if 'alt_names' in item %}{% for alt_name in item.alt_names %} {{ alt_name }}.{{ apex_domain }} {% endfor%}{% endif  %};
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl;
+
+  server_name {{ item.name }}.{{ apex_domain }} {% if 'alt_names' in item %}{% for alt_name in item.alt_names %} {{ alt_name }}.{{ apex_domain }} {% endfor%}{% endif  %};
+
+  ssl_certificate /etc/letsencrypt/live/{{ apex_domain }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ apex_domain }}/privkey.pem;
+  ssl_session_timeout 5m;
+  ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM';
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_prefer_server_ciphers on;
+  # ssl_dhparam /etc/nginx/conf.d/dhparam.pem;    # TODO: generate this file
+
+  location / {
+    proxy_pass http://{{ home_vm_ip }}:80/;   # port is mandatory, will throw 502 - bad gateway without
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 10000M;
+    add_header X-Served-By "{{ item.name }} Nginx Reverse Proxy";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Robots-Tag "noindex, nofollow, nosnippet, noarchive";
+  }
+}

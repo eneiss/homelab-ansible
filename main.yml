@@ -1,0 +1,9 @@
+---
+- name: Homelab playbook config
+  hosts: digitalocean
+  vars:
+    packages_state: latest   # use "present" or switch to "latest" to update packages when possible
+  roles:
+    - role: common_variables
+    - role: base
+    - role: docker_rootless
