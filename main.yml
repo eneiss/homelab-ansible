@@ -6,4 +6,6 @@
   roles:
     - role: common_variables
     - role: base
+      tags: base
     - role: docker_rootless
+      tags: docker_rootless
