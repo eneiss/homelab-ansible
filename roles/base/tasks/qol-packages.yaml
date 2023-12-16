@@ -25,6 +25,12 @@
     state: "{{ packages_state }}"
   loop: "{{ qol_packages.packages }}"
 
+- name: Start packages that need to be started
+  service:
+    name: "{{ item }}"
+    state: started
+  loop: "{{ packages_to_start }}"
+
 - name: Check python version
   ansible.builtin.command:
     cmd: "python3 --version"

@@ -17,6 +17,10 @@ qol_packages:
   - tcpdump
   - python3
   - python3-pip
+  - fail2ban
   # - python-setuptools   # not available in Ubuntu 23.04 Lunar
   pip_packages:
   - passlib
+
+packages_to_start:
+  - fail2ban

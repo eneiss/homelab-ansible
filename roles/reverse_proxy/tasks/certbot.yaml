@@ -1,10 +1,17 @@
 # See docs for certbot here: https://certbot.eff.org/instructions?ws=nginx&os=ubuntufocal&tab=wildcard
+- name: Ensure snap is present
+  become: true
+  ansible.builtin.apt:
+    name: snapd
+    state: "{{ packages_state }}"
+
 - name: Install certbot
   become: true
   community.general.snap:
     name: certbot
     state: present        # note: cannot be "latest"
     classic: true
+    channel: stable
     options:
     - trust-plugin-with-root=ok
 
