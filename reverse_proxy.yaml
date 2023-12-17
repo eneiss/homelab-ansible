@@ -1,6 +1,6 @@
 ---
 - name: Homelab playbook config
-  hosts: digitalocean
+  hosts: "{{ variable_host }}"
   vars:
     packages_state: present   # use "present" or switch to "latest" to update packages when possible
   roles:
