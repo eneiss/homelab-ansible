@@ -1,0 +1,3 @@
+---
+- name: Install and configure Promtail agent
+  include_tasks: promtail.yaml

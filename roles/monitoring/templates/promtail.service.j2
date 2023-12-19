@@ -1,0 +1,15 @@
+[Unit]
+Description=Promtail
+
+[Service]
+User=root
+WorkingDirectory={{ promtail.directory_path }}
+ExecStartPre=/bin/sleep 30
+ExecStart={{ promtail.directory_path }}/promtail-linux-amd64 --config.file={{ promtail.config_dir }}/{{ promtail.config_file_name }}
+SuccessExitStatus=143
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

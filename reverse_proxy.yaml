@@ -9,5 +9,7 @@
       tags: base
     - role: docker_rootless
       tags: docker_rootless
+    - role: monitoring
+      tags: monitoring
     - role: reverse_proxy
       tags: reverse_proxy

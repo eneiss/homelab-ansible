@@ -1,0 +1,8 @@
+required_packages:
+- unzip
+
+promtail:
+  directory_path: /opt/promtail    # Note: DO NOT add a trailing / !!
+  config_dir: /etc/opt/promtail    # Note: DO NOT add a trailing / !! -> TODO: change to /etc/promtail? or just etc?
+  config_file_name: promtail_config.yaml
+  release_uri: "https://github.com/grafana/loki/releases/download/v2.8.7/promtail-linux-amd64.zip"
