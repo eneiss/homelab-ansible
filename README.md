@@ -23,18 +23,18 @@ Example content:
 ## Usage
 
 - Create the required files mentioned above.
-- Choose the YAML file you want to run between `mail.yml` and `reverse_proxy.yaml`.
+- Choose the YAML file you want to run between `main.yaml` and `reverse_proxy.yaml`.
 - (Optional) Choose tags (`-t <tag-to-run>`) if you need to run only a specific role.
 - Apply the playbook following the examples below:
 ```sh
 # Run main playbook on 'my_host' 
-ansible-playbook main.yml -e @secrets_file.enc -e "variable_host=my_host"
+ansible-playbook main.yaml -e @secrets_file.enc -e "variable_host=my_host"
 # or for the reverse proxy
 ansible-playbook reverse_proxy.yaml -e @secrets_file.enc -e "variable_host=reverse_proxy"
 # only base
-ansible-playbook main.yml -e @secrets_file.enc -t base -e "variable_host=my_host"
+ansible-playbook main.yaml -e @secrets_file.enc -t base -e "variable_host=my_host"
 # dry run (check)
-ansible-playbook main.yml -e @secrets_file.enc -e "variable_host=my_host --check"
+ansible-playbook main.yaml -e @secrets_file.enc -e "variable_host=my_host --check"
 ```
 
 ## Notes

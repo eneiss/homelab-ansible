@@ -1,6 +1,6 @@
 ---
 - name: Homelab playbook config
-  hosts: "{{ variable_host }}"    # noqa: syntax-check  -> TODO: find a way to make it work despite unskippable
+  hosts: "{{ variable_host | default([]) }}"
   vars:
     packages_state: present   # use "present" or switch to "latest" to update packages when possible
   roles:
