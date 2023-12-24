@@ -1,0 +1,5 @@
+- name: Run systemctl daemon-reload
+  become: true
+  listen: daemon_reload
+  systemd:
+    daemon_reload: true

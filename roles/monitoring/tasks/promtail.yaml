@@ -1,11 +1,13 @@
 ---
 - name: "Ensure required packages are present"
+  become: true
   ansible.builtin.package:
     name: "{{ item }}"
     state: "{{ packages_state }}"
   loop: "{{ required_packages }}"
 
 - name: "Create Promtail directories"
+  become: true
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -16,30 +18,65 @@
   - "{{ promtail.directory_path }}"
   - "{{ promtail.config_dir }}"
 
+- name: "Check if Promtail binary already exists"
+  become: true
+  stat:
+    path: "{{ promtail.directory_path }}/promtail-linux-amd64"
+  register: promtail_binary
+
 - name: "Get Promtail archive"
+  become: true
   ansible.builtin.uri:
     url: "{{ promtail.release_uri }}"
     dest: "{{ promtail.directory_path }}"
+  when: not promtail_binary.stat.exists
 
 - name: "Unzip Promtail archive"
+  become: true
   ansible.builtin.unarchive:
     src: "{{ promtail.directory_path }}/promtail-linux-amd64.zip"
     dest: "{{ promtail.directory_path }}"
     mode: "0755"
     remote_src: true
+  when: not promtail_binary.stat.exists
+
+- name: Cleanup downloaded archive
+  become: true
+  file:
+    state: absent
+    path: "{{ promtail.directory_path }}/promtail-linux-amd64.zip"
 
 - name: "Create Promtail config file"
+  become: true
   ansible.builtin.template:
     src: promtail_config.yaml.j2
     dest: "{{ promtail.config_dir }}/{{ promtail.config_file_name }}"
     mode: "0644"
+  register: promtail_config_file
 
 - name: "Create Promtail service definition"
+  become: true
   ansible.builtin.template:
     src: promtail.service.j2
     dest: /etc/systemd/system/promtail.service
     mode: "0644"
+  notify: daemon_reload
 
-# TODO:
-# notify systemctl daemon-reload
-# enable & start service
+- name: Run handlers to reload daemons if needed
+  meta: flush_handlers
+
+- name: "Enable and start Promtail service"
+  become: true
+  service:
+    name: promtail
+    enabled: true
+    state: started
+  register: promtail_service
+
+- name: "Reload service if only config changed"
+  become: true
+  service:
+    name: promtail
+    enabled: true
+    state: restarted
+  when: promtail_config_file.changed and not promtail_service.changed

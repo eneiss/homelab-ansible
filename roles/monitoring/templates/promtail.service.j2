@@ -1,10 +1,10 @@
 [Unit]
 Description=Promtail
+After=network.target
 
 [Service]
 User=root
 WorkingDirectory={{ promtail.directory_path }}
-ExecStartPre=/bin/sleep 30
 ExecStart={{ promtail.directory_path }}/promtail-linux-amd64 --config.file={{ promtail.config_dir }}/{{ promtail.config_file_name }}
 SuccessExitStatus=143
 TimeoutStopSec=10
