@@ -1,7 +1,7 @@
 *.pem
 *.enc
 .vscode/*
-inventory.*
+inventory/hosts
 authorized_keys
 .git2/*
 .git/*

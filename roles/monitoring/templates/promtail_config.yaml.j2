@@ -1,4 +1,5 @@
 server:
+  disable: {{ disable_promtail_http_grpc_server }}    # inventory variable
   http_listen_port: 9080
   grpc_listen_port: 0
 
@@ -16,8 +17,8 @@ scrape_configs:
       labels:
         job: varlogs
         host: "{{ ansible_facts['nodename'] }}"
-        __path__: /var/log/cloud-init.log   # do not flood at first
-        # __path__: /var/log/*.log
+        # __path__: /var/log/cloud-init.log   # debug config, do not flood at first
+        __path__: /var/log/*.log
     relabel_configs:
       - source_labels: ['__path__']
         target_label: 'log_file_path'

@@ -10,7 +10,7 @@ Secret files. You will need to acquire them from someone who already has them.
 - `files/authorized_keys`: Authorized SSH keys file for your target hosts. **Will override any existing `~/.ssh/authorized_keys` file on your target hosts!**
 
 Other files:
-- `inventory.ini`: Your inventory file.
+- `inventory/hosts`: Your inventory file.
 Example content:
 ```ini
 [test_vm]
@@ -34,7 +34,7 @@ ansible-playbook reverse_proxy.yaml -e @secrets_file.enc -e "variable_host=rever
 # only base
 ansible-playbook main.yaml -e @secrets_file.enc -t base -e "variable_host=my_host"
 # dry run (check)
-ansible-playbook main.yaml -e @secrets_file.enc -e "variable_host=my_host --check"
+ansible-playbook main.yaml -e @secrets_file.enc -e "variable_host=my_host" --check
 ```
 
 ## Notes
