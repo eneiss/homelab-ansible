@@ -5,6 +5,7 @@
     packages_state: present   # use "present" or switch to "latest" to update packages when possible
   roles:
     - role: common_variables
+      tags: [base, docker_rootless, reverse_proxy]
     - role: base
       tags: base
     - role: docker_rootless
