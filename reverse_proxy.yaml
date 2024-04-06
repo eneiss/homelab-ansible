@@ -2,12 +2,14 @@
 - name: Homelab playbook config
   hosts: "{{ variable_host | default([]) }}"
   vars:
-    packages_state: present   # use "present" or switch to "latest" to update packages when possible
+    packages_state: present  # use "present" or switch to "latest" to update packages when possible
   roles:
     - role: common_variables
       tags: [base, docker_rootless, reverse_proxy]
     - role: base
       tags: base
+    - role: motd
+      tags: motd
     - role: docker_rootless
       tags: docker_rootless
     - role: monitoring

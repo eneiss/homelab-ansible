@@ -1,0 +1,16 @@
+# Based on ansible-lint config
+extends: default
+
+rules:
+  empty-lines:
+    max: 3
+    level: error
+  hyphens:
+    level: error
+  indentation: disable
+  key-duplicates: enable
+  line-length: disable
+  new-line-at-end-of-file: disable
+  new-lines:
+    type: unix
+  # truthy: disable

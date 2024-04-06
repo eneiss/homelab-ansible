@@ -1,0 +1,29 @@
+---
+- name: Copy Ansible banner to motd folder
+  become: true
+  copy:
+    src: banner.txt
+    dest: /etc/update-motd.d/banner.txt
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Add Ansible banner script to motd
+  become: true
+  copy:
+    src: 02-ansible-banner
+    dest: /etc/update-motd.d/02-ansible-banner
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Regenerate motd on login
+  become: true
+  lineinfile:
+    backrefs: true
+    line: '# \1'  # use single quotes to avoid having to escape the backslash
+    regexp: '(session +optional +pam_motd.so +motd=\/run\/motd.dynamic +noupdate)'
+    path: "{{ item }}"
+  loop:
+    - /etc/pam.d/sshd
+    - /etc/pam.d/login

@@ -1,8 +1,13 @@
+---
+profile: production
+
 skip_list:
   - fqcn[action-core]
   - fqcn
   - yaml[indentation]
   - var-naming[no-role-prefix]
+  - yaml[comments-indentation]
+  - yaml[document-start]
 
 enable_list:
   - no-log-password

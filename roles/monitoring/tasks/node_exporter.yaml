@@ -12,12 +12,23 @@
     dest: "{{ node_exporter.download_directory }}/node_exporter.tar.gz"
   when: not node_exporter_binary.stat.exists
 
-- name: "Unzip node exporter archive"
+- name: "Unarchive node exporter archive"
   become: true
   ansible.builtin.unarchive:
     src: "{{ node_exporter.download_directory }}/node_exporter.tar.gz"
-    dest: "{{ node_exporter.binary_directory }}"
+    dest: "{{ node_exporter.download_directory }}"
     mode: "0755"
+    remote_src: true
+    list_files: true
+  when: not node_exporter_binary.stat.exists
+  register: unarchived_files
+
+- name: "Move extracted binary to its install path"
+  become: true
+  ansible.builtin.copy:
+    src: "{{ node_exporter.download_directory }}/{{ unarchived_files.files | select('search', '[^/]+/node_exporter') | first }}"
+    dest: "{{ node_exporter.binary_directory }}"
+    mode: "0700"
     remote_src: true
   when: not node_exporter_binary.stat.exists
 
@@ -25,7 +36,11 @@
   become: true
   file:
     state: absent
-    path: "{{ node_exporter.download_directory }}/node_exporter.tar.gz"
+    path: "{{ item }}"
+  loop:
+    - "{{ node_exporter.download_directory }}/{{ unarchived_files.files | first }}"  # root directory created by unarchiving
+    - "{{ node_exporter.download_directory }}/node_exporter.tar.gz"
+  when: not node_exporter_binary.stat.exists
 
 - name: "Create node exporter service definition"
   become: true
@@ -33,7 +48,9 @@
     src: node_exporter.service.j2
     dest: /etc/systemd/system/node_exporter.service
     mode: "0644"
-  notify: daemon_reload
+  notify:
+    - daemon_reload
+    - restart_node_exporter
 
 - name: Run handlers to reload daemons if needed
   meta: flush_handlers

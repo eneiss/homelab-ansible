@@ -31,8 +31,8 @@ Example content:
 ansible-playbook main.yaml -e @secrets_file.enc -e "variable_host=my_host"
 # or for the reverse proxy
 ansible-playbook reverse_proxy.yaml -e @secrets_file.enc -e "variable_host=reverse_proxy"
-# only base
-ansible-playbook main.yaml -e @secrets_file.enc -t base -e "variable_host=my_host"
+# only monitoring
+ansible-playbook main.yaml -e @secrets_file.enc -t monitoring -e "variable_host=my_host"
 # dry run (check)
 ansible-playbook main.yaml -e @secrets_file.enc -e "variable_host=my_host" --check
 ```

@@ -1,6 +1,6 @@
 ---
 - name: Install and configure Promtail agent
   include_tasks: promtail.yaml
-
 - name: Install and configure node exporter agent
   include_tasks: node_exporter.yaml
+  when: not 'gitlab_main' in group_names  # node exporter already comes bundled with Gitlab
